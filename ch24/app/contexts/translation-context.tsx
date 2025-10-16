@@ -10,6 +10,18 @@ type TranslationContextType = {
   t: (key: TranslationKey) => string
 }
 
+// next-i18n
+
+// 部署
+// 1. 服务器 亚马逊 阿里云
+// 优点：便宜
+// 缺点：麻烦
+// nginx 反向代理 pm2 托管
+// 2. serverless vercel（nextjs母公司）
+// 优点：简单
+// 缺点：贵
+// 日志、环境（测试环境/生产环境/开发环境）、回滚、CDN、埋点、异常监控
+
 const TranslationContext = createContext<TranslationContextType | undefined>(undefined)
 
 export function TranslationProvider({ children }: { children: React.ReactNode }) {

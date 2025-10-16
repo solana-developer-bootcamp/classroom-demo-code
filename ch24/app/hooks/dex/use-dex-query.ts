@@ -1,7 +1,6 @@
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import { useState, useCallback, useMemo } from 'react';
-import * as anchor from '@coral-xyz/anchor';
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { PoolInfo, PoolReserves } from '../types/dex-types';
 import { findPoolAddress } from '../utils/address-utils';

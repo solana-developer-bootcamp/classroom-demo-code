@@ -37,7 +37,6 @@ export function useDexAdmin() {
       // 如果没有提供treasury，使用当前用户公钥
       const treasuryToUse = treasury || publicKey;
       
-      // 使用 send() 方法代替 rpc() 来避免模拟错误
       const transaction = await program.methods
         .initializeConfig(swapFeeRate, protocolFeeRate)
         .accounts({
@@ -55,7 +54,6 @@ export function useDexAdmin() {
       }
 
       const tx = await program.provider.sendAndConfirm(transaction, [], {
-        skipPreflight: true, // 跳过预检查来避免模拟错误
         commitment: 'confirmed',
       });
 
@@ -63,14 +61,6 @@ export function useDexAdmin() {
       return tx;
     } catch (err) {
       console.error('初始化配置失败:', err);
-      
-      // 检查是否是"已处理"错误但交易可能成功了
-      if (err instanceof Error && err.message.includes('already been processed')) {
-        console.log('配置初始化可能已经成功，请手动刷新配置查看最新状态');
-        // 返回一个成功的标识，因为交易可能实际上成功了
-        return 'success-but-simulated-failed';
-      }
-      
       setError(`初始化配置失败: ${err instanceof Error ? err.message : String(err)}`);
       return '';
     } finally {
@@ -95,7 +85,6 @@ export function useDexAdmin() {
     try {
       const config = findConfigAddress();
       
-      // 使用 send() 方法代替 rpc() 来避免模拟错误
       const transaction = await program.methods
         .updateConfigBasic(swapFeeRate, protocolFeeRate, isPaused)
         .accounts({
@@ -110,7 +99,6 @@ export function useDexAdmin() {
       }
 
       const tx = await program.provider.sendAndConfirm(transaction, [], {
-        skipPreflight: true, // 跳过预检查来避免模拟错误
         commitment: 'confirmed',
       });
 
@@ -118,14 +106,6 @@ export function useDexAdmin() {
       return tx;
     } catch (err) {
       console.error('更新配置失败:', err);
-      
-      // 检查是否是"已处理"错误但交易可能成功了
-      if (err instanceof Error && err.message.includes('already been processed')) {
-        console.log('交易可能已经成功，请手动刷新配置查看最新状态');
-        // 返回一个成功的标识，因为交易可能实际上成功了
-        return 'success-but-simulated-failed';
-      }
-      
       setError(`更新配置失败: ${err instanceof Error ? err.message : String(err)}`);
       return '';
     } finally {
@@ -146,7 +126,6 @@ export function useDexAdmin() {
     try {
       const config = findConfigAddress();
       
-      // 使用 send() 方法代替 rpc() 来避免模拟错误
       const transaction = await program.methods
         .updateAuthority()
         .accounts({
@@ -162,7 +141,6 @@ export function useDexAdmin() {
       }
 
       const tx = await program.provider.sendAndConfirm(transaction, [], {
-        skipPreflight: true, // 跳过预检查来避免模拟错误
         commitment: 'confirmed',
       });
 
@@ -170,14 +148,6 @@ export function useDexAdmin() {
       return tx;
     } catch (err) {
       console.error('更新权限失败:', err);
-      
-      // 检查是否是"已处理"错误但交易可能成功了
-      if (err instanceof Error && err.message.includes('already been processed')) {
-        console.log('权限更新可能已经成功，请手动刷新配置查看最新状态');
-        // 返回一个成功的标识，因为交易可能实际上成功了
-        return 'success-but-simulated-failed';
-      }
-      
       setError(`更新权限失败: ${err instanceof Error ? err.message : String(err)}`);
       return '';
     } finally {
@@ -198,7 +168,6 @@ export function useDexAdmin() {
     try {
       const config = findConfigAddress();
       
-      // 使用 send() 方法代替 rpc() 来避免模拟错误
       const transaction = await program.methods
         .updateTreasury()
         .accounts({
@@ -214,7 +183,6 @@ export function useDexAdmin() {
       }
 
       const tx = await program.provider.sendAndConfirm(transaction, [], {
-        skipPreflight: true, // 跳过预检查来避免模拟错误
         commitment: 'confirmed',
       });
 
@@ -222,14 +190,6 @@ export function useDexAdmin() {
       return tx;
     } catch (err) {
       console.error('更新Treasury失败:', err);
-      
-      // 检查是否是"已处理"错误但交易可能成功了
-      if (err instanceof Error && err.message.includes('already been processed')) {
-        console.log('Treasury更新可能已经成功，请手动刷新配置查看最新状态');
-        // 返回一个成功的标识，因为交易可能实际上成功了
-        return 'success-but-simulated-failed';
-      }
-      
       setError(`更新Treasury失败: ${err instanceof Error ? err.message : String(err)}`);
       return '';
     } finally {
@@ -271,95 +231,14 @@ export function useDexAdmin() {
     }
   }, [program]);
 
-  // 向后兼容的方法
-  const initializeGlobalConfig = useCallback(async (
-    swapFeeRate: number,
-    protocolFeeRate: number,
-    protocolFeeAccount?: PublicKey
-  ): Promise<string> => {
-    console.warn('initializeGlobalConfig is deprecated, use initializeConfig instead');
-    return initializeConfig(swapFeeRate, protocolFeeRate, protocolFeeAccount);
-  }, [initializeConfig]);
-
-  const togglePause = useCallback(async (isPaused: boolean): Promise<string> => {
-    console.warn('togglePause is deprecated, use updateConfigBasic instead');
-    if (!globalConfig) {
-      setError('无法获取当前配置，请先刷新配置');
-      return '';
-    }
-    
-    // 确保费率值有效
-    const currentSwapFeeRate = globalConfig.swapFeeRate ?? 30;
-    const currentProtocolFeeRate = globalConfig.protocolFeeRate ?? 5;
-    
-    console.log('切换暂停状态:', {
-      isPaused,
-      currentSwapFeeRate,
-      currentProtocolFeeRate,
-      globalConfig
-    });
-    
-    return updateConfigBasic(
-      currentSwapFeeRate,
-      currentProtocolFeeRate,
-      isPaused
-    );
-  }, [updateConfigBasic, globalConfig, setError]);
-
-  const updateSwapFeeRate = useCallback(async (newSwapFeeRate: number): Promise<string> => {
-    console.warn('updateSwapFeeRate is deprecated, use updateConfigBasic instead');
-    if (!globalConfig) {
-      throw new Error('Global config not loaded');
-    }
-    return updateConfigBasic(
-      newSwapFeeRate,
-      globalConfig.protocolFeeRate || 5,
-      globalConfig.isPaused || false
-    );
-  }, [updateConfigBasic, globalConfig]);
-
-  const updateProtocolFeeRate = useCallback(async (newProtocolFeeRate: number): Promise<string> => {
-    console.warn('updateProtocolFeeRate is deprecated, use updateConfigBasic instead');
-    if (!globalConfig) {
-      throw new Error('Global config not loaded');
-    }
-    return updateConfigBasic(
-      globalConfig.swapFeeRate || 30,
-      newProtocolFeeRate,
-      globalConfig.isPaused || false
-    );
-  }, [updateConfigBasic, globalConfig]);
-
-  const updateProtocolFeeAccount = useCallback(async (newProtocolFeeAccount: PublicKey): Promise<string> => {
-    console.warn('updateProtocolFeeAccount is deprecated, use updateTreasury instead');
-    return updateTreasury(newProtocolFeeAccount);
-  }, [updateTreasury]);
-
-  const updateFeeRates = useCallback(async (newSwapFeeRate: number, newProtocolFeeRate: number): Promise<string> => {
-    console.warn('updateFeeRates is deprecated, use updateConfigBasic instead');
-    return updateConfigBasic(
-      newSwapFeeRate,
-      newProtocolFeeRate,
-      globalConfig?.isPaused || false
-    );
-  }, [updateConfigBasic, globalConfig]);
-
   return {
     loading,
     error,
     globalConfig,
-    // 新方法
     initializeConfig,
     updateConfigBasic,
     updateAuthority,
     updateTreasury,
     fetchGlobalConfig,
-    // 向后兼容的方法
-    initializeGlobalConfig,
-    togglePause,
-    updateSwapFeeRate,
-    updateProtocolFeeRate,
-    updateProtocolFeeAccount,
-    updateFeeRates,
   };
 } 

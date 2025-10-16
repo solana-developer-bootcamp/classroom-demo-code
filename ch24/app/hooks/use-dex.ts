@@ -37,14 +37,6 @@ export function useDex(): DexOperations {
     updateTreasury: admin.updateTreasury,
     fetchGlobalConfig: admin.fetchGlobalConfig,
 
-    // 向后兼容的管理功能
-    initializeGlobalConfig: admin.initializeGlobalConfig,
-    togglePause: admin.togglePause,
-    updateSwapFeeRate: admin.updateSwapFeeRate,
-    updateProtocolFeeRate: admin.updateProtocolFeeRate,
-    updateProtocolFeeAccount: admin.updateProtocolFeeAccount,
-    updateFeeRates: admin.updateFeeRates,
-
     // 流动性功能 - 使用类型断言处理签名不匹配
     initializePool: liquidity.initializePool as any,
     addLiquidity: liquidity.addLiquidity,

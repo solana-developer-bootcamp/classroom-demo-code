@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { PublicKey } from "@solana/web3.js"
-import type { Token } from "@/components/token-selector"
+
 import { TokenAmountInput } from "@/components/token-amount-input"
 import { SlippageSelector } from "@/components/slippage-selector"
 import type { Pool } from "@/components/pool-selector"
@@ -18,7 +18,7 @@ import { useDex } from "@/hooks/use-dex"
 import { useDexSwap } from "@/hooks/dex/use-dex-swap"
 import { cn } from "@/lib/utils"
 import { logger } from "@/lib/logger"
-import { TOKEN_SYMBOL_MAP, DEFAULT_SLIPPAGE, ERROR_MESSAGES, SUCCESS_MESSAGES } from "@/lib/constants"
+import { TOKEN_SYMBOL_MAP, DEFAULT_SLIPPAGE, ERROR_MESSAGES } from "@/lib/constants"
 
 // 获取代币符号的辅助函数
 const getTokenSymbol = (address: string) => {
@@ -31,6 +31,7 @@ function SkeletonLoader({ className }: { className?: string }) {
 }
 
 export function SwapTab() {
+  // Hooks
   const { connected, publicKey } = useWallet()
   const { t } = useLanguage()
   const { toast } = useToast()
@@ -249,38 +250,15 @@ export function SwapTab() {
           setAmountOut(result.expectedOutput.toFixed(6))
           setPriceImpact(result.priceImpact)
         } else {
-          // 降级到模拟计算
-          if (reserveIn > 0 && reserveOut > 0) {
-            const amountInWithFee = amountInValue * (1 - getCurrentSwapFeeRate()) // 0.3% 手续费
-            const numerator = amountInWithFee * reserveOut
-            const denominator = reserveIn + amountInWithFee
-            const calculatedAmountOut = numerator / denominator
-
-            // 计算价格影响
-            const spotPrice = reserveOut / reserveIn
-            const executionPrice = calculatedAmountOut / amountInValue
-            const impact = Math.abs((spotPrice - executionPrice) / spotPrice) * 100
-
-            setAmountOut(calculatedAmountOut.toFixed(6))
-            setPriceImpact(impact)
-          }
+          // 计算失败时重置
+          setAmountOut("")
+          setPriceImpact(0)
         }
       } catch (err) {
         logger.error('计算交换输出失败:', err)
-        // 降级到模拟计算
-        if (reserveIn > 0 && reserveOut > 0) {
-          const amountInWithFee = amountInValue * (1 - getCurrentSwapFeeRate())
-          const numerator = amountInWithFee * reserveOut
-          const denominator = reserveIn + amountInWithFee
-          const calculatedAmountOut = numerator / denominator
-
-          const spotPrice = reserveOut / reserveIn
-          const executionPrice = calculatedAmountOut / amountInValue
-          const impact = Math.abs((spotPrice - executionPrice) / spotPrice) * 100
-
-          setAmountOut(calculatedAmountOut.toFixed(6))
-          setPriceImpact(impact)
-        }
+        // 计算失败时重置
+        setAmountOut("")
+        setPriceImpact(0)
       } finally {
         setCalculating(false)
       }
